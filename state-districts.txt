@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+  
+
+    <select id="state" onchange="loadDistricts()">
+        <option value="" disabled selected>Select State</option>
+        {% for state in states %}
+            <option value="{{ state }}">{{ state }}</option>
+        {% endfor %}
+    </select>
+    
+    <select id="district" disabled>
+        <option value="" disabled selected>Select District</option>
+    </select>
+
+  
+    <div id="state_district" style="display: none;">{{ districts|safe }}</div>
+    
+    <script>
+        function loadDistricts() {
+            const stateSelect = document.getElementById('state');
+            const districtSelect = document.getElementById('district');
+            const json = '{"result":true, "count":42}';
+        
+            const districtsData = document.getElementById('state_district').textContent;
+
+            const districts = JSON.parse(districtsData); // Parse Django dictionary to JavaScript
+            
+            const selectedState = stateSelect.value;
+            districtSelect.innerHTML = ''; // Clear existing options
+    
+            if (selectedState) {
+                
+                districtSelect.disabled = false; 
+                const districtOptions = districts[selectedState];
+                
+                districtOptions.forEach(function(district) {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                   
+                });
+                // Enable the district dropdown
+            } else {
+                districtSelect.disabled = true;
+                 // Disable the district dropdown if no districts found
+            }
+        }
+    </script>
+    
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def geo(request):
+    df = pd.read_csv('geo.csv')
+    unique_states = df['state'].unique()
+    states = unique_states.tolist()
+
+
+    
+    # Create a dictionary of states and their districts
+    
+        # Initialize an empty dictionary to store states and districts
+    state_district_dict = {}
+
+    # Iterate through the DataFrame and populate the dictionary
+    for index, row in df.iterrows():
+        state = row['state']
+        district = row['district']
+
+        # Check if the state is already in the dictionary
+        if state in state_district_dict:
+            state_district_dict[state].append(district)
+        else:
+            state_district_dict[state] = [district]
+
+    districts = json.dumps(state_district_dict)
+    return render(request, 'geo.html', {'states': states, 'districts':districts,'geo':state_district_dict})
